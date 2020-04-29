@@ -46,6 +46,15 @@ inline ScopeExit<F> MakeScopeExit(F&& f) {
 using namespace Microsoft::WRL;
 using namespace Microsoft::WRL::Wrappers;
 
+std::string ws2s(const std::wstring& s)
+{
+    int slength = (int)s.length() + 1;
+    int len = WideCharToMultiByte(CP_ACP, 0, s.c_str(), slength, 0, 0, 0, 0);
+    std::string r(len, '\0');
+    WideCharToMultiByte(CP_ACP, 0, s.c_str(), slength, &r[0], len, 0, 0);
+    return r;
+}
+
 extern "C" bool khrIcdOsVendorsEnumerateAppPackage()
 {
     HRESULT hrInit = Windows::Foundation::Initialize(RO_INIT_MULTITHREADED);
@@ -156,9 +165,7 @@ extern "C" bool khrIcdOsVendorsEnumerateAppPackage()
         wchar_t dllPath[MAX_PATH];
         wcscpy_s(dllPath, rawPath);
         wcscat_s(dllPath, L"\\" PLATFORM_PATH L"\\OpenCLOn12.dll");
-
-        std::wstring_convert<std::codecvt_utf8<wchar_t>> convert;
-        std::string narrowDllPath = convert.to_bytes(dllPath);
+        std::string narrowDllPath = ws2s(dllPath);
 
         adapterAdd(narrowDllPath.c_str(), {});
         return true;
